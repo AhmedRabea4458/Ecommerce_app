@@ -8,10 +8,8 @@ import 'package:project/services/product_service.dart';
 import 'package:project/widgets/category_selector.dart';
 import 'package:project/widgets/custom_message.dart';
 import 'package:project/widgets/product_card.dart';
-import '../cubits/auth/auth_cubit.dart';
+import '../cubits/product/products_cubit.dart';
 import '../cubits/profile/theme_cubit.dart';
-import '../services/auth_service.dart';
-import '../utils/debouncer.dart';
 import '../widgets/custom_message_yes_or_no.dart';
 
 class MyProducts extends StatefulWidget {
@@ -29,11 +27,16 @@ class MyProductsState extends State<MyProducts> {
   @override
   void initState() {
     super.initState();
+    _loadProducts();
   }
 
-  @override
-  void dispose() {
-    super.dispose();
+  void _loadProducts([String? sellerId]) {
+    final userId = sellerId ?? context.read<UserCubit>().user?.uid;
+    if (userId == null) return;
+    context.read<ProductsCubit>().getMyProducts(
+      category: selectedCategory,
+      sellerId: userId,
+    );
   }
 
 
@@ -45,10 +48,8 @@ class MyProductsState extends State<MyProducts> {
     if (user == null) {
       return Center(child: Text("Please log in first"));
     }
-
-    return  Column(
+    return Column(
       children: [
-
         CategorySelector(
           categories: const [
             "All",
@@ -61,41 +62,36 @@ class MyProductsState extends State<MyProducts> {
           ],
           onCategorySelected: (selected) {
             setState(() {
-              selectedCategory=selected;
+              selectedCategory = selected;
             });
+            _loadProducts();
           },
         ),
         Expanded(
-            child:StreamBuilder<List<Product>>(
-              stream: _productService.streamMyProductsByCategory(selectedCategory,user.uid),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(child: Text("Error: ${snapshot.error}"));
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Center(child: Text("No products available",style: 
-                    TextStyle(
-                      fontSize: 16,
-                      color: AppColors.primaryTextColor(isDarkMode)
-                    ),));
+          child: BlocBuilder<ProductsCubit, ProductsState>(
+            builder: (context, state) {
+              if (state is ProductsLoading) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (state is ProductsSuccess) {
+                final filtered = state.products.where((p) =>
+                    p.name.toLowerCase().contains(widget.searchQuery.toLowerCase())
+                ).toList();
+
+                if (filtered.isEmpty) {
+                  return const Center(child: Text('No products found'));
                 }
 
-
-                final products = snapshot.data!.where((p) =>
-                    p.name.toLowerCase().contains(widget.searchQuery))
-                    .toList();
                 return GridView.builder(
-                  padding: EdgeInsets.all(10),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  padding: const EdgeInsets.all(10),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     childAspectRatio: 0.75,
                     crossAxisSpacing: 10,
                     mainAxisSpacing: 10,
                   ),
-                  itemCount: products.length,
+                  itemCount: filtered.length,
                   itemBuilder: (context, index) {
-                    final product = products[index];
+                    final product = filtered[index];
                     return ProductCard(
                       imageUrl: product.imageUrl,
                       name: product.name,
@@ -104,10 +100,18 @@ class MyProductsState extends State<MyProducts> {
                       price: product.price,
                       isVendor: true,
                       onTap: () {
-                        Navigator.pushNamed(context, '/edit_product', arguments: {'product': product});
+                        Navigator.pushNamed(
+                          context,
+                          '/edit_product',
+                          arguments: {'product': product},
+                        );
                       },
                       onEdit: () {
-                        Navigator.pushNamed(context, '/edit_product', arguments: {'product': product});
+                        Navigator.pushNamed(
+                          context,
+                          '/edit_product',
+                          arguments: {'product': product},
+                        );
                       },
                       onDelete: () {
                         CustomMessageYesOrNo(
@@ -117,23 +121,24 @@ class MyProductsState extends State<MyProducts> {
                           btnOkOnPress: () async {
                             await _productService.deleteProduct(product.id!);
                             ShowAwesomeDialog.success(context, 'تم حذف المنتج بنجاح.');
+                            _loadProducts();
                           },
                           btnCancelOnPress: () {},
                         ).show(context);
-                        },
+                      },
                     );
-
                   },
                 );
-              },
-            )
+              } else if (state is ProductsError ) {
+                final message =  state.message;
+                return Center(child: Text(message));
+              }
 
+              return const SizedBox();
+            },
+          ),
         ),
-
       ],
-
     );
   }
 }
-
-

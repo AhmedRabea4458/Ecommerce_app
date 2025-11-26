@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:project/constants/app_colors.dart';
+import 'package:project/cubits/product/products_cubit.dart';
 import 'package:project/model/product.dart';
 import 'package:project/services/product_service.dart';
 import 'package:project/widgets/category_selector.dart';
@@ -21,33 +22,26 @@ class HomePage extends StatefulWidget {
 
 class HomePageState extends State<HomePage> {
 
- ProductService _productService = ProductService();
+  String selectedCategory = "All";
 
   @override
   void initState() {
     super.initState();
+    _loadProducts();
   }
 
-  @override
-  void dispose() {
-    super.dispose();
+  void _loadProducts() {
+    context.read<ProductsCubit>().getProducts(
+      category: selectedCategory,
+    );
   }
-
-
-
-
-  String selectedCategory = "All";
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = context
-        .watch<ThemeCubit>()
-        .state;
+    final isDarkMode = context.watch<ThemeCubit>().state;
 
     return Column(
       children: [
-
-
         CategorySelector(
           categories: const [
             "All",
@@ -62,66 +56,65 @@ class HomePageState extends State<HomePage> {
             setState(() {
               selectedCategory = selected;
             });
+            _loadProducts();
           },
         ),
 
         Expanded(
-          child: StreamBuilder<List<Product>>(
-            stream: _productService.streamProductsByCategory(selectedCategory),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return Center(child: CircularProgressIndicator());
-              } else if (snapshot.hasError) {
-                return Center(child: Text("Error: ${snapshot.error}"));
-              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return Center(
-                  child: Text(
-                    "No products available",
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: AppColors.primaryTextColor(isDarkMode),
-                    ),
-                  ),
-                );
+
+          child: BlocBuilder<ProductsCubit, ProductsState>(
+
+            builder: (context, state) {
+              if (state is ProductsLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }else if(state is ProductsError) {
+                return Center(child: Text(state.message));
               }
 
-              final products = snapshot.data!
-                  .where((p) => p.name.toLowerCase().contains(widget.searchQuery))
-                  .toList();
+              else if(state is ProductsSuccess) {
+                final filtered = state.products.where((p) =>
+                    p.name.toLowerCase().contains(
+                        widget.searchQuery.toLowerCase())
+                ).toList();
 
-              return GridView.builder(
-                padding: EdgeInsets.all(10),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.75,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                ),
-                itemCount: products.length,
-                itemBuilder: (context, index) {
-                  final product = products[index];
-                  return ProductCard(
-                    imageUrl: product.imageUrl,
-                    name: product.name,
-                    rating: product.rating,
-                    reviews: product.reviews,
-                    price: product.price,
-                    onTap: () {
-                      Navigator.pushNamed(
-                        context,
-                        '/details',
-                        arguments: {'product': product},
-                      );
-                    },
-                  );
-                },
-              );
+
+                return GridView.builder(
+                  padding: const EdgeInsets.all(10),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 0.75,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                  ),
+                  itemCount: filtered.length,
+                  itemBuilder: (context, index) {
+                    final product = filtered[index];
+                    return ProductCard(
+                      imageUrl: product.imageUrl,
+                      name: product.name,
+                      rating: product.rating,
+                      reviews: product.reviews,
+                      price: product.price,
+                      onTap: () {
+                        Navigator.pushNamed(
+                          context,
+                          '/details',
+                          arguments: {'product': product},
+                        );
+                      },
+                    );
+                  },
+                );
+              }
+              return const SizedBox();
             },
+
           ),
+
         ),
+
       ],
     );
+
   }
 }
-
-

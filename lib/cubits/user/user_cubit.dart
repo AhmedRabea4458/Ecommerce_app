@@ -21,7 +21,7 @@ class UserCubit extends Cubit<UserState> {
         currentUser = user;
         emit(UserLoaded(user));
       } else {
-        emit(UserError("المستخدم غير موجود"));
+        emit(UserNotLoggedIn());
       }
     } catch (e) {
       emit(UserError(e.toString()));

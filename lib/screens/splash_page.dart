@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:project/cubits/user/user_cubit.dart';
 import 'package:project/cubits/user/user_state.dart';
+import '../cubits/product/products_cubit.dart';
 import '../layout/main_layout.dart';
+import '../services/product_service.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -25,10 +27,15 @@ class _SplashPageState extends State<SplashPage> {
         if (state is UserLoaded) {
           Navigator.pushAndRemoveUntil(
             context,
-            MaterialPageRoute(builder: (_) => const MainLayout()),
+            MaterialPageRoute(
+              builder: (_) => BlocProvider(
+                create: (_) => ProductsCubit(ProductService()),
+                child: const MainLayout(),
+              ),
+            ),
                 (route) => false,
           );
-        } else if (state is UserError) {
+        } else if (state is UserNotLoggedIn) {
           Navigator.pushNamedAndRemoveUntil(
               context, '/welcome', (route) => false);
         }
