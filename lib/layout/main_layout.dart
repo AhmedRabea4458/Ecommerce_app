@@ -6,6 +6,7 @@ import 'package:project/screens/cart.dart';
 import 'package:project/screens/home_page.dart';
 import 'package:project/screens/my_products.dart';
 import 'package:project/screens/profile_page.dart';
+import 'package:project/screens/wishlist_screen.dart';
 import 'package:project/services/auth_service.dart';
 import 'package:project/services/user_service.dart';
 import '../cubits/profile/theme_cubit.dart';
@@ -49,6 +50,7 @@ class _MainLayoutState extends State<MainLayout> {
             searchQuery: searchQuery,
             onSearchChanged: onSearchChanged,
           ),
+          WishlistScreen(),
           Cart(),
           ProfilePage()
         ];
@@ -83,6 +85,12 @@ class _MainLayoutState extends State<MainLayout> {
               ),
             ),
           ),
+          CustomAppBar(
+            title: "FavoritesItems",
+            centerTitle: true,
+
+            ),
+
           const CustomAppBar(title: "My Cart", centerTitle: true),
           CustomAppBar(
             title: "Profile",
@@ -129,6 +137,12 @@ class _MainLayoutState extends State<MainLayout> {
         return const [
           BottomNavigationBarItem(
               icon: Icon(Icons.home_outlined), label: 'Home'),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.favorite_border),
+            activeIcon: Icon(Icons.favorite),
+            label: 'MyFav',
+          ),
+
           BottomNavigationBarItem(
               icon: Icon(Icons.shopping_cart), label: 'Cart'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),

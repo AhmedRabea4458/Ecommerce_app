@@ -15,7 +15,8 @@ class ProductCard extends StatelessWidget {
   final bool isVendor;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
-
+  final VoidCallback? onAddFav;
+   final bool?isFavorite;
   const ProductCard({
     super.key,
     required this.imageUrl,
@@ -27,6 +28,7 @@ class ProductCard extends StatelessWidget {
     this.isVendor = false,
     this.onEdit,
     this.onDelete,
+    this.onAddFav,  this.isFavorite
   });
 
   @override
@@ -138,7 +140,8 @@ class ProductCard extends StatelessWidget {
               ],
             ),
           ),
-          Gap(w: 12,),
+          Gap(w: 12),
+
           if (isVendor)
             Positioned(
               right: 0,
@@ -155,7 +158,26 @@ class ProductCard extends StatelessWidget {
                   ),
                 ],
               ),
+            )
+          else
+            Positioned(
+              right: 0,
+              bottom: 0,
+              child: IconButton(
+                icon: isFavorite!?Icon(
+                  Icons.favorite,
+                  color:  Colors.red
+                ):Icon(
+                    Icons.favorite_border,
+                    color: isDarkMode ? Colors.white : Colors.black,
+
+                ),
+                iconSize: 24,
+                onPressed: onAddFav,
+              ),
             ),
+
+
         ],
       ),
     );

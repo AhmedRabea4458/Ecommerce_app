@@ -19,7 +19,7 @@ class AddProductForm extends StatefulWidget {
   final String? selectedCategory;
   final Function(String?) onCategoryChanged;
   final VoidCallback onSubmit;
- final bool isLoading;
+  final bool isLoading;
   const AddProductForm({
     super.key,
     required this.nameController,
@@ -147,11 +147,11 @@ class _AddProductFormState extends State<AddProductForm> {
           ),
           Gap(h: 32),
 
-               CustomButton(
-                title: "Add Product",
-                onPressed: _internalSubmit,
-                isLoading: widget.isLoading,
-              ),
+          CustomButton(
+            title: "Add Product",
+            onPressed: _internalSubmit,
+            isLoading: widget.isLoading,
+          ),
 
 
           Gap(h: 24),

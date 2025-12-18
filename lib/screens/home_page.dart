@@ -7,6 +7,7 @@ import 'package:project/services/product_service.dart';
 import 'package:project/widgets/category_selector.dart';
 import 'package:project/widgets/product_card.dart';
 
+import '../cubits/Wishlist/favorites_cubit.dart';
 import '../cubits/profile/theme_cubit.dart';
 
 
@@ -89,18 +90,25 @@ class HomePageState extends State<HomePage> {
                   itemCount: filtered.length,
                   itemBuilder: (context, index) {
                     final product = filtered[index];
+                    final isFav = context.watch<FavoritesCubit>().isFavorite(product.id!);
                     return ProductCard(
                       imageUrl: product.imageUrl,
                       name: product.name,
                       rating: product.rating,
                       reviews: product.reviews,
                       price: product.price,
-                      onTap: () {
+                      isFavorite: isFav,
+                      onAddFav: () {
+                        context.read<FavoritesCubit>().toggleFavorite(product.id!);
+                      },
+
+                        onTap: () {
                         Navigator.pushNamed(
                           context,
                           '/details',
                           arguments: {'product': product},
                         );
+
                       },
                     );
                   },

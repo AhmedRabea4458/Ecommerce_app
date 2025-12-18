@@ -14,10 +14,18 @@ class SplashPage extends StatefulWidget {
 }
 
 class _SplashPageState extends State<SplashPage> {
+  bool _navigated = false;
+
   @override
   void initState() {
     super.initState();
     context.read<UserCubit>().loadUser();
+  }
+
+  void _navigateOnce(VoidCallback action) {
+    if (_navigated) return;
+    _navigated = true;
+    action();
   }
 
   @override
@@ -25,25 +33,30 @@ class _SplashPageState extends State<SplashPage> {
     return BlocListener<UserCubit, UserState>(
       listener: (context, state) {
         if (state is UserLoaded) {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(
-              builder: (_) => BlocProvider(
-                create: (_) => ProductsCubit(ProductService()),
-                child: const MainLayout(),
+          _navigateOnce(() {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (_) => BlocProvider(
+                  create: (_) => ProductsCubit(ProductService()),
+                  child: const MainLayout(),
+                ),
               ),
-            ),
-                (route) => false,
-          );
+                  (route) => false,
+            );
+          });
         } else if (state is UserNotLoggedIn) {
-          Navigator.pushNamedAndRemoveUntil(
-              context, '/welcome', (route) => false);
+          _navigateOnce(() {
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              '/welcome',
+                  (route) => false,
+            );
+          });
         }
       },
       child: const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
+        body: Center(child: CircularProgressIndicator()),
       ),
     );
   }

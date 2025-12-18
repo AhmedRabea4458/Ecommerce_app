@@ -1,130 +1,159 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:project/cubits/auth/auth_state.dart';
+import 'package:project/utils/translate_error.dart';
+import 'package:project/widgets/custom_appbar.dart';
+import 'package:project/widgets/custom_message.dart';
+import 'package:project/widgets/gap.dart';
+import '../../../widgets/custom_button.dart';
+import '../../../widgets/custom _textfield.dart';
+import '../cubits/profile/theme_cubit.dart';
+
+import '../constants/app_colors.dart';
 import '../cubits/auth/auth_cubit.dart';
+import '../cubits/auth/auth_state.dart';
 import '../layout/main_layout.dart';
 import '../widgets/auth_link_text.dart';
-import '../widgets/custom _textfield.dart';
-import '../widgets/custom_appbar.dart';
-import '../widgets/custom_button.dart';
-import '../widgets/custom_message.dart';
-import '../widgets/gap.dart';
-
 class LoginPage extends StatelessWidget {
+  LoginPage({super.key});
+
   final _formKey = GlobalKey<FormState>();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<AuthCubit, AuthState>(
-        listener: (context, state) {
-      if (state is LogInSuccess) {
-        ShowAwesomeDialog.success(context, "تم تسجيل الدخول بنجاح.", onOk: () {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (_) => const MainLayout()),
-                (route) => false,
-          );
-        });
-      } else if (state is LogInFailure) {
-        print(state.error);
+    final isDark = context.watch<ThemeCubit>().state;
 
-        if (state.error == 'يجب تفعيل البريد الإلكتروني أولاً') {
-          ShowAwesomeDialog.warning(
+    return BlocListener<AuthCubit, AuthState>(
+      listener: (context, state) {
+        if (state is LogInSuccess) {
+          ShowAwesomeDialog.success(
             context,
-            state.error,
-            onOk: () async {
-              await FirebaseAuth.instance.currentUser?.sendEmailVerification();
+            "تم تسجيل الدخول بنجاح",
+            onOk: () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const MainLayout()),
+                    (_) => false,
+              );
             },
           );
-        } else {
-          ShowAwesomeDialog.error(context, state.error);
+        } else if (state is LogInFailure) {
+          if (state.error == 'يجب تفعيل البريد الإلكتروني أولاً') {
+            ShowAwesomeDialog.warning(
+              context,
+              state.error,
+              onOk: () async {
+                await FirebaseAuth.instance.currentUser
+                    ?.sendEmailVerification();
+              },
+            );
+          } else {
+            ShowAwesomeDialog.error(context, state.error);
+          }
         }
-      }
-    },
-    child:Scaffold(
-      appBar: CustomAppBar(
-        title: "تسجيل الدخول",
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: SafeArea(
-        child: GestureDetector(
-          onTap: () => FocusScope.of(context).unfocus(),
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                   Gap(h: 20),
-                  CustomTextField(
-                    controller: emailController,
-                    hint: "email",
-                    prefixIcon: Icons.email,
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'يرجى إدخال البريد الإلكتروني';
-                      }
-                      final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-                      if (!emailRegex.hasMatch(value.trim())) {
-                        return 'البريد الإلكتروني غير صالح';
-                      }
-                      return null;
-                    },
-                  ),
-                   Gap(h: 20),
-                  CustomTextField(
-                    controller: passwordController,
-                    hint: "password",
-                    prefixIcon: Icons.lock,
-                    obscureText: true,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'يرجى إدخال كلمة السر';
-                      }
-                      if (value.length < 6) {
-                        return 'كلمة السر يجب أن تكون 6 أحرف على الأقل';
-                      }
-                      return null;
-                    },
-                  ),
-                   Gap(h: 25),
-                   BlocBuilder<AuthCubit, AuthState>(
-                   builder: (context, state) {
-                     return CustomButton(title: 'Log In',
-                         isLoading: state is LogInLoading,
-                         onPressed: () {
-                           if (_formKey.currentState!.validate()) {
-                             context.read<AuthCubit>().LogIn(
-                               emailController.text.trim(),
-                               passwordController.text.trim(),
-                             );
-                           }
-                         }
-                     );
+      },
+      child: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Scaffold(
+          backgroundColor:
+          isDark ? AppColors.darkBackground : AppColors.primary,
+          body: Column(
+            children: [
+              const SizedBox(height: 90),
 
-                   }
-                   ),
-                    Gap(h: 20),
-                    AuthLinkText(
-                    text: "Don't have an account?",
-                    link: "Sign Up",
-                    onTap: () =>  Navigator.popAndPushNamed(context, '/signup'),
-                  ),
-                ],
+              // Header
+              const Icon(Icons.lock_outline,
+                  size: 80, color: Colors.white),
+              const SizedBox(height: 10),
+              const Text(
+                "Welcome Back",
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold),
               ),
-            ),
+              const SizedBox(height: 6),
+              const Text(
+                "Log in to continue",
+                style: TextStyle(color: Colors.white70),
+              ),
+
+              const SizedBox(height: 40),
+
+              // Bottom Sheet
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color:
+                    isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(30),
+                      topRight: Radius.circular(30),
+                    ),
+                  ),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 30),
+
+                          CustomTextField(
+                            controller: emailController,
+                            hint: "Email",
+                            prefixIcon: Icons.email,
+                          ),
+
+                          Gap(h: 16),
+
+                          CustomTextField(
+                            controller: passwordController,
+                            hint: "Password",
+                            prefixIcon: Icons.lock,
+                            obscureText: true,
+                          ),
+
+                          Gap(h: 30),
+
+                          BlocBuilder<AuthCubit, AuthState>(
+                            builder: (context, state) {
+                              return CustomButton(
+                                title: "Log In",
+                                isLoading: state is LogInLoading,
+                                onPressed: () {
+                                  if (_formKey.currentState!.validate()) {
+                                    context.read<AuthCubit>().LogIn(
+                                      emailController.text.trim(),
+                                      passwordController.text.trim(),
+                                    );
+                                  }
+                                },
+                              );
+                            },
+                          ),
+
+                          Gap(h: 20),
+
+                          AuthLinkText(
+                            text: "Don't have an account?",
+                            link: "Sign Up",
+                            onTap: () => Navigator.popAndPushNamed(
+                                context, '/signup'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
-    ),
-
     );
   }
 }

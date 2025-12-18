@@ -22,8 +22,8 @@ class CustomMessageYesOrNo{
       animType: AnimType.scale,
       title: title,
       desc: description,
-      btnOkText:"yes" ,
-      btnCancelText: "No",
+      btnOkText:"نعم" ,
+      btnCancelText: "لا",
       btnCancelOnPress: btnCancelOnPress,
       btnOkOnPress: btnOkOnPress,
     ).show();

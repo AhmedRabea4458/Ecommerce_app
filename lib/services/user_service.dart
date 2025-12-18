@@ -63,15 +63,50 @@ class UserService {
   Future<UserModel?> getUserData() async {
     final user = _auth.currentUser;
     if (user == null) return null;
-    print("==========================");
-    print("Current UID: ${user.uid}");
-    print("==========================");
+
 
     final doc = await _firestore.collection('users').doc(user.uid).get();
     if (doc.exists) {
       return UserModel.fromMap(doc.data()!, user.uid);
     }
     return null;
+  }
+  Future<void> toggleWishlist(String productId) async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception("No user logged in");
+
+    final docRef = _firestore.collection('users').doc(user.uid);
+
+    await _firestore.runTransaction((transaction) async {
+      final snapshot = await transaction.get(docRef);
+      if (!snapshot.exists) throw Exception("User not found");
+
+      final data = snapshot.data()!;
+      final List wishlist = data['wishlist'] ?? [];
+
+      if (wishlist.contains(productId)) {
+        transaction.update(docRef, {
+          'wishlist': FieldValue.arrayRemove([productId])
+        });
+      } else {
+        transaction.update(docRef, {
+          'wishlist': FieldValue.arrayUnion([productId])
+        });
+      }
+    });
+  }
+  Future<List<String>> getWishlist() async {
+    final user = _auth.currentUser;
+    if (user == null) return [];
+
+    final doc = await _firestore.collection('users').doc(user.uid).get();
+    if (!doc.exists) return [];
+
+    return List<String>.from(doc.data()?['wishlist'] ?? []);
+  }
+  Future<bool> isInWishlist(String productId) async {
+    final wishlist = await getWishlist();
+    return wishlist.contains(productId);
   }
 
 }

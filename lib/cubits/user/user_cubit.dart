@@ -14,9 +14,9 @@ class UserCubit extends Cubit<UserState> {
   UserCubit(this.userService, this._authService) : super(UserInitial());
 
   Future<void> loadUser() async {
-    emit(UserLoading());
     try {
       final user = await userService.getUserData();
+
       if (user != null) {
         currentUser = user;
         emit(UserLoaded(user));

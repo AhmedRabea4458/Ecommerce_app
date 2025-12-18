@@ -6,7 +6,8 @@ import 'package:project/widgets/custom_message.dart';
 import 'package:project/widgets/gap.dart';
 import '../../../widgets/custom_button.dart';
 import '../../../widgets/custom _textfield.dart';
-
+import '../cubits/profile/theme_cubit.dart';
+import '../constants/app_colors.dart';
 import '../cubits/auth/auth_cubit.dart';
 import '../cubits/auth/auth_state.dart';
 import '../widgets/auth_link_text.dart';
@@ -22,124 +23,143 @@ class SignUpPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.watch<ThemeCubit>().state;
 
-      return BlocListener<AuthCubit, AuthState>(
-        listener: (context, state) {
-          if (state is SignUpSuccess) {
-            ShowAwesomeDialog.info(context, "تم إرسال رابط التفعيل إلى بريدك الإلكتروني", onOk: () {
+    return BlocListener<AuthCubit, AuthState>(
+      listener: (context, state) {
+        if (state is SignUpSuccess) {
+          ShowAwesomeDialog.info(
+            context,
+            "تم إرسال رابط التفعيل إلى بريدك الإلكتروني",
+            onOk: () {
               Navigator.popAndPushNamed(context, '/login');
-            });
-          } else if (state is SignUpFailure) {
-            ShowAwesomeDialog.error(context, translateFirebaseError(state.error));
-          }
-        },
+            },
+          );
+        } else if (state is SignUpFailure) {
+          ShowAwesomeDialog.error(
+            context,
+            translateFirebaseError(state.error),
+          );
+        }
+      },
+      child: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
         child: Scaffold(
-          appBar: CustomAppBar(title: "Sign Up",centerTitle: true,),
-          body: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Form(
-              key: _formKey,
-              child: SingleChildScrollView(
-                reverse: true,
+          backgroundColor:
+          isDark ? AppColors.darkBackground : AppColors.primary,
+          body: Column(
+            children: [
+              const SizedBox(height: 80),
 
-                child: Column(
-                  children: [
-                    CustomTextField(
-                      controller: fullNameController,
-                      hint: "Full Name",
-                      prefixIcon: Icons.person,
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'يرجى إدخال الاسم بالكامل';
-                        }
-                        if (value.trim().length < 3) {
-                          return 'الاسم يجب أن يكون 3 أحرف على الأقل';
-                        }
-                        return null;
-                      },
-                    ),
-                    Gap(h: 16),
-                    CustomTextField(
-                      controller: emailController,
-                      hint: "Email",
-                      prefixIcon: Icons.email,
-                      validator: (value) {
-                        if (value == null || value.trim().isEmpty) {
-                          return 'يرجى إدخال البريد الإلكتروني';
-                        }
-                        final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-                        if (!emailRegex.hasMatch(value.trim())) {
-                          return 'البريد الإلكتروني غير صالح';
-                        }
-                        return null;
-                      },
-                    ),
-                    Gap(h: 16),
-                    CustomTextField(
-                      controller: passwordController,
-                      hint: "Password",
-                      prefixIcon: Icons.lock,
-                      obscureText: true,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'يرجى إدخال كلمة السر';
-                        }
-                        if (value.length < 6) {
-                          return 'كلمة السر يجب أن تكون 6 أحرف على الأقل';
-                        }
+              // Header
+              const Icon(Icons.shopping_bag,
+                  size: 80, color: Colors.white),
+              const SizedBox(height: 10),
+              const Text(
+                "Create Account",
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                "Sign up to continue",
+                style: TextStyle(color: Colors.white70),
+              ),
 
-                        return null;
-                      },
-                    ),
-                    Gap(h: 16),
-                    CustomTextField(
-                      controller: confirmPasswordController,
-                      hint: "Confirm Password",
-                      prefixIcon: Icons.lock,
-                      obscureText: true,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'يرجى تأكيد كلمة السر';
-                        }
-                        if (value != passwordController.text) {
-                          return 'كلمة السر غير متطابقة';
-                        }
-                        return null;
-                      },
-                    ),
+              const SizedBox(height: 40),
 
-                    Gap(h: 20),
-                    BlocBuilder<AuthCubit, AuthState>(
-                      builder: (context, state) {
-                        return CustomButton(
-                          title: "Sign Up",
-                          isLoading: state is SignUpLoading,
-                          onPressed: () {
-                            FocusScope.of(context).unfocus();
-                            if (_formKey.currentState!.validate()) {
-                              context.read<AuthCubit>().signUp(
-                                emailController.text.trim(),
-                                passwordController.text.trim(),
-                                fullNameController.text.trim(),
+              // Bottom Sheet
+              Expanded(
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color:
+                    isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(30),
+                      topRight: Radius.circular(30),
+                    ),
+                  ),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 30),
+
+                          CustomTextField(
+                            controller: fullNameController,
+                            hint: "Full Name",
+                            prefixIcon: Icons.person,
+                          ),
+
+                          Gap(h: 16),
+
+                          CustomTextField(
+                            controller: emailController,
+                            hint: "Email",
+                            prefixIcon: Icons.email,
+                          ),
+
+                          Gap(h: 16),
+
+                          CustomTextField(
+                            controller: passwordController,
+                            hint: "Password",
+                            prefixIcon: Icons.lock,
+                            obscureText: true,
+                          ),
+
+                          Gap(h: 16),
+
+                          CustomTextField(
+                            controller: confirmPasswordController,
+                            hint: "Confirm Password",
+                            prefixIcon: Icons.lock,
+                            obscureText: true,
+                          ),
+
+                          Gap(h: 30),
+
+                          BlocBuilder<AuthCubit, AuthState>(
+                            builder: (context, state) {
+                              return CustomButton(
+                                title: "Sign Up",
+                                isLoading: state is SignUpLoading,
+                                onPressed: () {
+                                  if (_formKey.currentState!.validate()) {
+                                    context.read<AuthCubit>().signUp(
+                                      emailController.text.trim(),
+                                      passwordController.text.trim(),
+                                      fullNameController.text.trim(),
+                                    );
+                                  }
+                                },
                               );
-                            }
-                          },
-                        );
+                            },
+                          ),
 
-                      },
+                          Gap(h: 20),
+
+                          AuthLinkText(
+                            text: "Already have an account?",
+                            link: "Log In",
+                            onTap: () => Navigator.popAndPushNamed(
+                                context, '/login'),
+                          ),
+                        ],
+                      ),
                     ),
-                    AuthLinkText(
-                      text: "Do you have an account?",
-                      link: "Log In",
-                      onTap: () =>  Navigator.popAndPushNamed(context, '/login'),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
         ),
-
+      ),
     );
   }
 }

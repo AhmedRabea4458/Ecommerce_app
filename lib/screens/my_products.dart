@@ -116,11 +116,11 @@ class MyProductsState extends State<MyProducts> {
                       onDelete: () {
                         CustomMessageYesOrNo(
                           dialogType: DialogType.warning,
-                          title: "Delete Product",
-                          description: "Are you sure you want to delete this product?",
+                          title: "حذف منتج",
+                          description: "هل أنت متأكد أنك تريد حذف المنتج؟",
                           btnOkOnPress: () async {
                             await _productService.deleteProduct(product.id!);
-                            ShowAwesomeDialog.success(context, 'تم حذف المنتج بنجاح.');
+
                             _loadProducts();
                           },
                           btnCancelOnPress: () {},
